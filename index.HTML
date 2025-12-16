@@ -3,147 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopee Resi Converter - Crop Label Saja</title>
+    <title>Shopee Resi Converter - Fixed</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            padding: 35px;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-            max-width: 450px;
-            width: 100%;
-            text-align: center;
-        }
-        h2 {
-            color: #ee4d2d;
-            margin: 0 0 8px 0;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
-        p.subtitle {
-            color: #888;
-            font-size: 13px;
-            margin-bottom: 25px;
-        }
-        
-        .upload-box {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            min-height: 120px;
-            border: 2px dashed #ee4d2d;
-            background-color: #fffdfc;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-bottom: 20px;
-        }
-        .upload-box:hover {
-            background-color: #ffece6;
-            border-color: #d73211;
-            transform: translateY(-2px);
-        }
-        .upload-text {
-            font-size: 16px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        .upload-subtext {
-            font-size: 12px;
-            color: #999;
-        }
-        
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .container { background: white; padding: 35px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); max-width: 450px; width: 100%; text-align: center; }
+        h2 { color: #ee4d2d; margin: 0 0 8px 0; font-weight: 800; }
+        p.subtitle { color: #888; font-size: 13px; margin-bottom: 25px; }
+        .upload-box { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; min-height: 120px; border: 2px dashed #ee4d2d; background-color: #fffdfc; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; margin-bottom: 20px; }
+        .upload-box:hover { background-color: #ffece6; }
+        .upload-text { font-size: 16px; font-weight: 700; color: #333; }
         input[type="file"] { display: none; }
-        
-        #preview-container {
-            display: none;
-            margin-top: 20px;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-        }
-        
-        canvas {
-            max-width: 100%;
-            height: auto;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        
-        .input-group {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-        .input-label {
-            font-size: 12px;
-            font-weight: bold;
-            color: #555;
-            margin-bottom: 5px;
-            display: block;
-        }
-        .name-input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: 0.2s;
-        }
-        .name-input:focus {
-            border-color: #ee4d2d;
-            outline: none;
-        }
-
-        .btn {
-            background-color: #ee4d2d;
-            color: white;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.2s;
-        }
-        .btn:hover { background-color: #d73211; }
-        
-        #status {
-            font-size: 13px;
-            color: #666;
-            margin-top: 10px;
-            min-height: 20px;
-        }
+        #preview-container { display: none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+        canvas { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; }
+        .name-input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 15px; }
+        .btn { background-color: #ee4d2d; color: white; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; }
+        #status { font-size: 13px; color: #666; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>Resi Converter Shopee</h2>
-    <p class="subtitle">Crop Label Saja, Nama Produk Tetap</p>
+    <p class="subtitle">Nama Pembeli & Produk Otomatis</p>
 
     <label class="upload-box" for="fileInput">
         <span class="upload-text">Klik Pilih File PDF</span>
-        <span class="upload-subtext">(Format Shopee)</span>
     </label>
     <input type="file" id="fileInput" accept="application/pdf">
 
@@ -151,12 +37,7 @@
 
     <div id="preview-container">
         <canvas id="the-canvas"></canvas>
-        
-        <div class="input-group">
-            <label class="input-label">Nama File (Bisa Diedit):</label>
-            <input type="text" id="fileNameInput" class="name-input" value="loading...">
-        </div>
-
+        <input type="text" id="fileNameInput" class="name-input">
         <button id="downloadBtn" class="btn">Download JPG</button>
     </div>
 </div>
@@ -185,74 +66,100 @@
                 const typedarray = new Uint8Array(this.result);
                 const pdf = await pdfjsLib.getDocument(typedarray).promise;
                 const page = await pdf.getPage(1);
-                
                 const textContent = await page.getTextContent();
                 const items = textContent.items;
-                const fullText = items.map(i => i.str).join(" "); // Mengambil semua teks untuk pencarian
+                
+                // Ambil semua teks dan bersihkan
+                const allStrings = items.map(i => i.str.trim());
+                const fullText = allStrings.join(" ");
+                const lowerText = fullText.toLowerCase();
 
-                // --- 1. CARI NAMA PEMBELI (Logika terbaik sejauh ini) ---
+                // --- 1. CARI NAMA PEMBELI ---
                 let detectedName = "Pelanggan";
-                let startIndex = -1;
-                for (let i = 0; i < items.length; i++) {
-                    if (items[i].str.toLowerCase().includes("penerima")) {
-                        startIndex = i;
-                        break;
-                    }
-                }
-
-                if (startIndex !== -1) {
-                    for (let j = 1; j <= 5; j++) { // Cek 5 item ke depan
-                        if (startIndex + j >= items.length) break;
-                        let txt = items[startIndex + j].str.trim();
-                        
-                        if (txt.length < 2 || txt === ":" || txt.match(/^[0-9]+$/)) continue; // Filter sampah
-                        if (txt.toUpperCase().includes("CRISPINDO") || txt.toUpperCase().includes("PENGIRIM")) continue; // Blacklist
-                        
-                        detectedName = txt.split(/[\/,\(\)\n]|Phone|Kota/)[0].trim(); // Ambil & potong
-                        break;
-                    }
-                }
-
-                // --- 2. CARI BERAT & NAMA PRODUK (Dari fullText) ---
-                let berat = "1kg";
-                let produk = "Paket";
+                const penerimaIdx = allStrings.findIndex(s => s.includes("Penerima:"));
                 
-                const beratMatch = fullText.match(/Berat[:\s\.]*(\d+\s*(gr|kg))/i);
+                if (penerimaIdx !== -1) {
+                    for (let j = 1; j <= 5; j++) {
+                        let candidate = allStrings[penerimaIdx + j] || "";
+                        // Blacklist toko Anda dan filter sampah
+                        const isShop = candidate.toLowerCase().includes("crispy") || candidate.toLowerCase().includes("indonesia");
+                        const isPhone = /^[0-9+ \-]+$/.test(candidate.replace(/\s/g, ""));
+                        if (candidate.length > 2 && !isShop && !isPhone && candidate !== "HOME") {
+                            detectedName = candidate.split(/[\/,\(\)\n]|Phone|628/)[0].trim();
+                            break;
+                        }
+                    }
+                }
+
+                // --- 2. CARI BERAT ---
+                let berat = "";
+                const beratMatch = fullText.match(/(\d+([.,]\d+)?\s*(gr|kg))/i);
                 if (beratMatch) berat = beratMatch[1].replace(/\s/g, "");
+
+                // --- 3. LOGIKA CARI PRODUK (MULTI-ITEM / BORONGAN) ---
+                let infoProduk = "";
                 
-                const lower = fullText.toLowerCase();
-                if (lower.includes("basreng")) produk = "Basreng";
-                else if (lower.includes("stik") && lower.includes("jeruk")) produk = "Stik Jeruk";
-                else if (lower.includes("keripik")) produk = "Keripik";
+                // Hitung berapa banyak baris produk di tabel (mencari angka urutan 1, 2, 3...)
+                const itemCounts = allStrings.filter(s => /^\d+$/.test(s) && parseInt(s) > 1 && parseInt(s) < 20).length;
 
-                fileNameInput.value = `${detectedName} ${berat} ${produk}`;
-                status.innerText = "✅ Selesai. Silakan cek nama & download.";
+                if (itemCounts > 0) {
+                    // Jika ada lebih dari 1 jenis barang, tandai sebagai PAKET
+                    infoProduk = `PAKET ${itemCounts + 1} Macam`;
+                } else {
+                    // Jika cuma 1 barang, cari SKU seperti biasa
+                    const skuMatch = fullText.match(/[A-Z]{2,}-\s*[A-Z]{2,}-\s*\d+/g);
+                    if (skuMatch) {
+                        infoProduk = skuMatch[0].replace(/\s/g, "");
+                    } else {
+                        const kamus = ["Makaroni", "Basreng", "Keripik", "Stik", "Usus", "Seblak"];
+                        for (const k of kamus) {
+                            if (lowerText.includes(k.toLowerCase())) { infoProduk = k; break; }
+                        }
+                    }
+                }
 
-                // --- 3. RENDER & CROP HANYA BAGIAN LABEL RESI ---
-                const viewport = page.getViewport({scale: 2});
+                // --- 4. CARI TOTAL QTY (Menjumlahkan semua angka di kolom Qty) ---
+                let totalQty = 0;
+                // Mencari angka di akhir baris yang biasanya adalah Qty per item
+                const allNumbers = fullText.match(/\s(\d+)$/gm) || [];
+                if (itemCounts > 0) {
+                    // Untuk paket besar seperti Nailul Aman, kita tuliskan "Borongan"
+                    fileNameInput.value = `${detectedName} ${berat} ${infoProduk} TOTAL_BANYAK`.trim();
+                } else {
+                    // Untuk paket kecil tetap pakai format x1, x2, dst
+                    const qtyMatch = fullText.match(/Qty\s*(\d+)/i);
+                    let q = qtyMatch ? "x" + qtyMatch[1] : "";
+                    fileNameInput.value = `${detectedName} ${berat} ${infoProduk} ${q}`.trim();
+                }
+
+                // --- 4. CARI QTY ---
+                let qty = "";
+                const qtyMatch = fullText.match(/Qty\s*(\d+)/i) || fullText.match(/[\s](\d+)$/);
+                if (qtyMatch) {
+                    // Hanya ambil jika angkanya masuk akal (1-9)
+                    const num = qtyMatch[1];
+                    if (parseInt(num) < 10) qty = "x" + num;
+                }
+
+                fileNameInput.value = `${detectedName} ${berat} ${infoProduk} ${qty}`.trim();
+
+                // --- 5. RENDER & CROP ---
+                const viewport = page.getViewport({scale: 3});
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = viewport.height;
                 tempCanvas.height = viewport.width;
                 const tempCtx = tempCanvas.getContext('2d');
-                
                 tempCtx.translate(tempCanvas.width, 0);
                 tempCtx.rotate(90 * Math.PI / 180);
-                
                 await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
 
-                // --- PENTING: UBAH CROP RATIO KE 0.40 (40% dari kiri akan di-skip) ---
-                const skipRatio = 0.40; // Ini akan memotong sekitar 40% dari sisi kiri
-                const finalW = tempCanvas.width * (1 - skipRatio); // Lebar yang tersisa (yaitu label)
-                
+                const skipRatio = 0.40;
+                const finalW = tempCanvas.width * (1 - skipRatio);
                 canvas.width = finalW;
                 canvas.height = tempCanvas.height;
-
-                ctx.drawImage(
-                    tempCanvas, 
-                    tempCanvas.width * skipRatio, 0, finalW, tempCanvas.height, // Source: Dari mana crop
-                    0, 0, finalW, tempCanvas.height // Destination: Ke mana gambar ditempatkan
-                );
+                ctx.drawImage(tempCanvas, tempCanvas.width * skipRatio, 0, finalW, tempCanvas.height, 0, 0, finalW, tempCanvas.height);
                 
+                status.innerText = "✅ Berhasil!";
                 previewContainer.style.display = 'block';
 
             } catch (err) {
@@ -264,16 +171,11 @@
     });
 
     downloadBtn.addEventListener('click', () => {
-        let finalName = fileNameInput.value.trim();
-        if (!finalName) finalName = "resi-shopee";
-        if (!finalName.toLowerCase().endsWith(".jpg")) finalName += ".jpg";
-
         const link = document.createElement('a');
-        link.download = finalName;
-        link.href = canvas.toDataURL("image/jpeg", 0.9);
+        link.download = (fileNameInput.value || "resi") + ".jpg";
+        link.href = canvas.toDataURL("image/jpeg", 0.95);
         link.click();
     });
 </script>
-
 </body>
 </html>
