@@ -45,6 +45,16 @@
 <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+    // --- PENGATURAN TOKO (ISI NAMA TOKO ANDA DI SINI) ---
+    // Tambahkan nama semua toko Anda ke dalam tanda kurung siku, dipisah koma.
+    // Tulis dengan HURUF KECIL semua.
+    const daftarToko = [
+        "crispy indonesia", 
+        "crispindo", 
+        "snack enak jaya", 
+        "official shop"
+    ];
+
     const fileInput = document.getElementById('fileInput');
     const status = document.getElementById('status');
     const canvas = document.getElementById('the-canvas');
@@ -74,33 +84,39 @@
                 const fullText = allStrings.join(" ");
                 const lowerText = fullText.toLowerCase();
 
-                // --- 1. CARI NAMA PEMBELI (LOGIKA ANTI-GAGAL) ---
+                // --- 1. LOGIKA "PEMBURU NAMA" (SANGAT AGRESIF) ---
                 let detectedName = "Pelanggan";
                 
-                // Cari index baris yang mengandung kata "Penerima"
-                const penerimaLineIdx = allStrings.findIndex(s => s.toLowerCase().includes("penerima"));
+                // Cari dimana kata "Penerima" pertama kali muncul
+                const startIdx = allStrings.findIndex(s => s.toLowerCase().includes("penerima"));
 
-                if (penerimaLineIdx !== -1) {
-                    // Cek baris tersebut dan 5 baris di bawahnya
-                    for (let j = 0; j <= 5; j++) {
-                        let candidate = (allStrings[penerimaLineIdx + j] || "").trim();
-                        
-                        // Bersihkan teks dari label "Penerima:" agar hanya sisa namanya
-                        let cleanName = candidate.replace(/penerima[:\s]*/gi, "").trim();
+                if (startIdx !== -1) {
+                    // Cek sampai 20 baris ke bawah (untuk jaga-jaga kalau teksnya terpecah parah)
+                    for (let i = 0; i < 20; i++) {
+                        let line = allStrings[startIdx + i];
+                        if (!line) continue;
 
-                        // Syarat Nama Pembeli Asli:
-                        // 1. Tidak boleh kosong
-                        // 2. Tidak boleh berisi nama tokomu (crispy indonesia)
-                        // 3. Tidak boleh hanya angka (nomor telepon)
-                        // 4. Tidak boleh kata sistem (HOME, RT, RW)
-                        const isShop = cleanName.toLowerCase().includes("crispy") || cleanName.toLowerCase().includes("indonesia");
-                        const isPhone = /^[0-9+ \-]+$/.test(cleanName.replace(/\s/g, ""));
-                        const isSystem = cleanName === "HOME" || cleanName === "" || cleanName === ":";
+                        // Hapus kata "Penerima" dan ":" dari baris tersebut dulu
+                        let cleanLine = line.replace(/penerima/gi, "").replace(/:/g, "").trim();
+                        let lowerLine = cleanLine.toLowerCase();
 
-                        if (cleanName.length > 2 && !isShop && !isPhone && !isSystem) {
-                            detectedName = cleanName.split(/[\/,\(\)\n]|Phone|628/)[0].trim();
-                            break;
-                        }
+                        // --- DAFTAR BLACKLIST (ABA I KAN INI) ---
+                        // 1. Toko Anda sendiri
+                        if (lowerLine.includes("crispy") || lowerLine.includes("indonesia")) continue;
+                        // 2. Alamat (Jalan, RT, RW, Kabupaten, Kecamatan)
+                        if (lowerLine.includes("jalan") || lowerLine.includes("jl.") || lowerLine.includes("rt") || lowerLine.includes("rw") || lowerLine.includes("kab.") || lowerLine.includes("kec.")) continue;
+                        // 3. Label Sistem
+                        if (["home", "kantor", "cod", "shopee", "spx", "hemat", "reguler"].includes(lowerLine)) continue;
+                        // 4. Nomor Telepon (Jika isinya cuma angka/plus/strip dan panjang)
+                        let digitOnly = cleanLine.replace(/[^0-9]/g, "");
+                        if (digitOnly.length > 6) continue;
+                        // 5. Terlalu pendek
+                        if (cleanLine.length < 3) continue;
+
+                        // --- JIKA LOLOS SEMUA BLACKLIST, BERARTI INI NAMANYA! ---
+                        // Ambil nama depan saja (sebelum tanda kurung, garis miring, atau kata Phone)
+                        detectedName = cleanLine.split(/[\/,\(\)\n]|Phone|628/)[0].trim();
+                        break; // Stop mencari, sudah ketemu!
                     }
                 }
 
