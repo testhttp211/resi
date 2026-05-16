@@ -3,33 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopee Resi Converter - Fixed</title>
+    <title>Shopee Resi Converter - Zoom Variasi</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .container { background: white; padding: 35px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); max-width: 450px; width: 100%; text-align: center; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+        }
         h2 { color: #ee4d2d; margin: 0 0 8px 0; font-weight: 800; }
         p.subtitle { color: #888; font-size: 13px; margin-bottom: 25px; }
-        .upload-box { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; min-height: 120px; border: 2px dashed #ee4d2d; background-color: #fffdfc; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; margin-bottom: 20px; }
-        .upload-box:hover { background-color: #ffece6; }
-        .upload-text { font-size: 16px; font-weight: 700; color: #333; }
+        
+        .upload-box {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            width: 100%; min-height: 120px; border: 2px dashed #ee4d2d;
+            background-color: #fffdfc; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; margin-bottom: 20px;
+        }
+        .upload-box:hover { background-color: #ffece6; border-color: #d73211; transform: translateY(-2px); }
+        .upload-text { font-size: 16px; font-weight: 700; color: #333; margin-bottom: 5px; }
+        .upload-subtext { font-size: 12px; color: #999; }
         input[type="file"] { display: none; }
+        
         #preview-container { display: none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
-        canvas { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; }
-        .name-input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 15px; }
-        .btn { background-color: #ee4d2d; color: white; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; }
-        #status { font-size: 13px; color: #666; margin-top: 10px; }
+        canvas {
+            max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;
+            margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-label { font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; display: block; }
+        .name-input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; transition: 0.2s; }
+        .name-input:focus { border-color: #ee4d2d; outline: none; }
+        
+        .btn {
+            background-color: #ee4d2d; color: white; padding: 14px; border: none;
+            border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; transition: background 0.2s;
+        }
+        .btn:hover { background-color: #d73211; }
+        #status { font-size: 13px; color: #666; margin-top: 10px; min-height: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>Resi Converter Shopee</h2>
-    <p class="subtitle">Nama Pembeli & Produk Otomatis</p>
+    <p class="subtitle">Crop Label + Zoom Variasi Otomatis (Anti Pusing)</p>
 
     <label class="upload-box" for="fileInput">
         <span class="upload-text">Klik Pilih File PDF</span>
+        <span class="upload-subtext">(Format Shopee)</span>
     </label>
     <input type="file" id="fileInput" accept="application/pdf">
 
@@ -37,23 +75,18 @@
 
     <div id="preview-container">
         <canvas id="the-canvas"></canvas>
-        <input type="text" id="fileNameInput" class="name-input">
+        
+        <div class="input-group">
+            <label class="input-label">Nama File (Bisa Diedit):</label>
+            <input type="text" id="fileNameInput" class="name-input" value="loading...">
+        </div>
+
         <button id="downloadBtn" class="btn">Download JPG</button>
     </div>
 </div>
 
 <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    // --- PENGATURAN TOKO (ISI NAMA TOKO ANDA DI SINI) ---
-    // Tambahkan nama semua toko Anda ke dalam tanda kurung siku, dipisah koma.
-    // Tulis dengan HURUF KECIL semua.
-    const daftarToko = [
-        "crispy indonesia", 
-        "crispindo", 
-        "snack enak jaya", 
-        "official shop"
-    ];
 
     const fileInput = document.getElementById('fileInput');
     const status = document.getElementById('status');
@@ -67,7 +100,7 @@
         const file = e.target.files[0];
         if (!file) return;
 
-        status.innerText = "⏳ Memproses...";
+        status.innerText = "⏳ Memproses dan membesarkan variasi...";
         previewContainer.style.display = 'none';
         
         const fileReader = new FileReader();
@@ -76,119 +109,92 @@
                 const typedarray = new Uint8Array(this.result);
                 const pdf = await pdfjsLib.getDocument(typedarray).promise;
                 const page = await pdf.getPage(1);
+                
                 const textContent = await page.getTextContent();
                 const items = textContent.items;
-                
-                // Ambil semua teks dan bersihkan
-                const allStrings = items.map(i => i.str.trim());
-                const fullText = allStrings.join(" ");
-                const lowerText = fullText.toLowerCase();
+                const fullText = items.map(i => i.str).join(" "); 
 
-                // --- 1. LOGIKA "PEMBURU NAMA" (SANGAT AGRESIF) ---
+                // --- 1. CARI NAMA PEMBELI ---
                 let detectedName = "Pelanggan";
-                
-                // Cari dimana kata "Penerima" pertama kali muncul
-                const startIdx = allStrings.findIndex(s => s.toLowerCase().includes("penerima"));
-
-                if (startIdx !== -1) {
-                    // Cek sampai 20 baris ke bawah (untuk jaga-jaga kalau teksnya terpecah parah)
-                    for (let i = 0; i < 20; i++) {
-                        let line = allStrings[startIdx + i];
-                        if (!line) continue;
-
-                        // Hapus kata "Penerima" dan ":" dari baris tersebut dulu
-                        let cleanLine = line.replace(/penerima/gi, "").replace(/:/g, "").trim();
-                        let lowerLine = cleanLine.toLowerCase();
-
-                        // --- DAFTAR BLACKLIST (ABA I KAN INI) ---
-                        // 1. Toko Anda sendiri
-                        if (lowerLine.includes("crispy") || lowerLine.includes("indonesia")) continue;
-                        // 2. Alamat (Jalan, RT, RW, Kabupaten, Kecamatan)
-                        if (lowerLine.includes("jalan") || lowerLine.includes("jl.") || lowerLine.includes("rt") || lowerLine.includes("rw") || lowerLine.includes("kab.") || lowerLine.includes("kec.")) continue;
-                        // 3. Label Sistem
-                        if (["home", "kantor", "cod", "shopee", "spx", "hemat", "reguler"].includes(lowerLine)) continue;
-                        // 4. Nomor Telepon (Jika isinya cuma angka/plus/strip dan panjang)
-                        let digitOnly = cleanLine.replace(/[^0-9]/g, "");
-                        if (digitOnly.length > 6) continue;
-                        // 5. Terlalu pendek
-                        if (cleanLine.length < 3) continue;
-
-                        // --- JIKA LOLOS SEMUA BLACKLIST, BERARTI INI NAMANYA! ---
-                        // Ambil nama depan saja (sebelum tanda kurung, garis miring, atau kata Phone)
-                        detectedName = cleanLine.split(/[\/,\(\)\n]|Phone|628/)[0].trim();
-                        break; // Stop mencari, sudah ketemu!
+                let startIndex = -1;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].str.toLowerCase().includes("penerima")) {
+                        startIndex = i;
+                        break;
                     }
                 }
 
-                // --- 2. CARI BERAT ---
-                let berat = "";
-                const beratMatch = fullText.match(/(\d+([.,]\d+)?\s*(gr|kg))/i);
+                if (startIndex !== -1) {
+                    for (let j = 1; j <= 5; j++) { 
+                        if (startIndex + j >= items.length) break;
+                        let txt = items[startIndex + j].str.trim();
+                        if (txt.length < 2 || txt === ":" || txt.match(/^[0-9]+$/)) continue; 
+                        if (txt.toUpperCase().includes("CRISPINDO") || txt.toUpperCase().includes("PENGIRIM")) continue; 
+                        detectedName = txt.split(/[\/,\(\)\n]|Phone|Kota/)[0].trim(); 
+                        break;
+                    }
+                }
+
+                // --- 2. CARI BERAT & NAMA PRODUK ---
+                let berat = "1kg";
+                let produk = "Akrilik"; 
+                
+                const beratMatch = fullText.match(/Berat[:\s\.]*(\d+\s*(gr|kg))/i);
                 if (beratMatch) berat = beratMatch[1].replace(/\s/g, "");
-
-                // --- 3. LOGIKA CARI PRODUK (MULTI-ITEM / BORONGAN) ---
-                let infoProduk = "";
                 
-                // Hitung berapa banyak baris produk di tabel (mencari angka urutan 1, 2, 3...)
-                const itemCounts = allStrings.filter(s => /^\d+$/.test(s) && parseInt(s) > 1 && parseInt(s) < 20).length;
+                const lower = fullText.toLowerCase();
+                if (lower.includes("qris")) produk = "Standing QRIS";
+                else if (lower.includes("neon")) produk = "Neon Box";
+                else if (lower.includes("nomor") && lower.includes("rumah")) produk = "Nomor Rumah";
+                else if (lower.includes("a4")) produk = "A4";
+                else if (lower.includes("a5")) produk = "A5";
+                else if (lower.includes("a6")) produk = "A6";
 
-                if (itemCounts > 0) {
-                    // Jika ada lebih dari 1 jenis barang, tandai sebagai PAKET
-                    infoProduk = `PAKET ${itemCounts + 1} Macam`;
-                } else {
-                    // Jika cuma 1 barang, cari SKU seperti biasa
-                    const skuMatch = fullText.match(/[A-Z]{2,}-\s*[A-Z]{2,}-\s*\d+/g);
-                    if (skuMatch) {
-                        infoProduk = skuMatch[0].replace(/\s/g, "");
-                    } else {
-                        const kamus = ["Makaroni", "Basreng", "Keripik", "Stik", "Usus", "Seblak"];
-                        for (const k of kamus) {
-                            if (lowerText.includes(k.toLowerCase())) { infoProduk = k; break; }
-                        }
-                    }
-                }
+                // Format nama file
+                fileNameInput.value = `EllUX_Legacy_${detectedName}_${berat}_${produk}`;
+                status.innerText = "✅ Selesai. Silakan cek nama & download.";
 
-                // --- 4. CARI TOTAL QTY (Menjumlahkan semua angka di kolom Qty) ---
-                let totalQty = 0;
-                // Mencari angka di akhir baris yang biasanya adalah Qty per item
-                const allNumbers = fullText.match(/\s(\d+)$/gm) || [];
-                if (itemCounts > 0) {
-                    // Untuk paket besar seperti Nailul Aman, kita tuliskan "Borongan"
-                    fileNameInput.value = `${detectedName} ${berat} ${infoProduk} TOTAL_BANYAK`.trim();
-                } else {
-                    // Untuk paket kecil tetap pakai format x1, x2, dst
-                    const qtyMatch = fullText.match(/Qty\s*(\d+)/i);
-                    let q = qtyMatch ? "x" + qtyMatch[1] : "";
-                    fileNameInput.value = `${detectedName} ${berat} ${infoProduk} ${q}`.trim();
-                }
-
-                // --- 4. CARI QTY ---
-                let qty = "";
-                const qtyMatch = fullText.match(/Qty\s*(\d+)/i) || fullText.match(/[\s](\d+)$/);
-                if (qtyMatch) {
-                    // Hanya ambil jika angkanya masuk akal (1-9)
-                    const num = qtyMatch[1];
-                    if (parseInt(num) < 10) qty = "x" + num;
-                }
-
-                fileNameInput.value = `${detectedName} ${berat} ${infoProduk} ${qty}`.trim();
-
-                // --- 5. RENDER & CROP ---
-                const viewport = page.getViewport({scale: 3});
+                // --- 3. RENDER, CROP LABEL & ZOOM VARIASI ---
+                const viewport = page.getViewport({scale: 2});
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = viewport.height;
                 tempCanvas.height = viewport.width;
                 const tempCtx = tempCanvas.getContext('2d');
+                
                 tempCtx.translate(tempCanvas.width, 0);
                 tempCtx.rotate(90 * Math.PI / 180);
+                
                 await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
 
-                const skipRatio = 0.40;
-                const finalW = tempCanvas.width * (1 - skipRatio);
-                canvas.width = finalW;
-                canvas.height = tempCanvas.height;
-                ctx.drawImage(tempCanvas, tempCanvas.width * skipRatio, 0, finalW, tempCanvas.height, 0, 0, finalW, tempCanvas.height);
+                // Tentukan area pemotongan
+                const skipRatio = 0.40; 
+                const productAreaW = tempCanvas.width * skipRatio;     // Area daftar produk (dikiri setelah dirotasi)
+                const labelAreaW = tempCanvas.width - productAreaW;    // Area resi/alamat (dikanan)
+                const imgH = tempCanvas.height;
+
+                // Hitung seberapa besar variasi mau di-zoom (1.6x = cukup besar dan jelas)
+                const zoomScale = 1.6; 
+                const zoomedProductW = productAreaW * zoomScale;
+                const zoomedProductH = imgH * zoomScale;
+
+                // Siapkan ukuran canvas final (disambung memanjang ke samping)
+                canvas.width = labelAreaW + zoomedProductW;
+                canvas.height = Math.max(imgH, zoomedProductH);
+
+                // Tarik area label (alamat) dan taruh di awal
+                ctx.drawImage(
+                    tempCanvas, 
+                    productAreaW, 0, labelAreaW, imgH, // Dari mana
+                    0, 0, labelAreaW, imgH             // Ke mana
+                );
+
+                // Tarik area produk/variasi, perbesar (zoom), dan sambung di sebelahnya
+                ctx.drawImage(
+                    tempCanvas,
+                    0, 0, productAreaW, imgH,                           // Dari mana (area kiri)
+                    labelAreaW, 0, zoomedProductW, zoomedProductH       // Ke mana (sebelah label, diperbesar)
+                );
                 
-                status.innerText = "✅ Berhasil!";
                 previewContainer.style.display = 'block';
 
             } catch (err) {
@@ -200,11 +206,16 @@
     });
 
     downloadBtn.addEventListener('click', () => {
+        let finalName = fileNameInput.value.trim();
+        if (!finalName) finalName = "resi-shopee";
+        if (!finalName.toLowerCase().endsWith(".jpg")) finalName += ".jpg";
+
         const link = document.createElement('a');
-        link.download = (fileNameInput.value || "resi") + ".jpg";
-        link.href = canvas.toDataURL("image/jpeg", 0.95);
+        link.download = finalName;
+        link.href = canvas.toDataURL("image/jpeg", 1.0); // Kualitas maksimal
         link.click();
     });
 </script>
+
 </body>
 </html>
