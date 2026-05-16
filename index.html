@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopee Resi Converter - Zoom Variasi</title>
+    <title>Shopee Resi Converter - Fixed Layout Vertikal</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -63,7 +63,7 @@
 
 <div class="container">
     <h2>Resi Converter Shopee</h2>
-    <p class="subtitle">Crop Label + Zoom Variasi Otomatis (Anti Pusing)</p>
+    <p class="subtitle">Layout Vertikal Pas 58mm + Zoom Variasi Tajam</p>
 
     <label class="upload-box" for="fileInput">
         <span class="upload-text">Klik Pilih File PDF</span>
@@ -100,7 +100,7 @@
         const file = e.target.files[0];
         if (!file) return;
 
-        status.innerText = "⏳ Memproses dan membesarkan variasi...";
+        status.innerText = "⏳ Memproses layout vertikal...";
         previewContainer.style.display = 'none';
         
         const fileReader = new FileReader();
@@ -114,7 +114,7 @@
                 const items = textContent.items;
                 const fullText = items.map(i => i.str).join(" "); 
 
-                // --- 1. CARI NAMA PEMBELI ---
+                // --- 1. DETEKSI NAMA PEMBELI ---
                 let detectedName = "Pelanggan";
                 let startIndex = -1;
                 for (let i = 0; i < items.length; i++) {
@@ -123,7 +123,6 @@
                         break;
                     }
                 }
-
                 if (startIndex !== -1) {
                     for (let j = 1; j <= 5; j++) { 
                         if (startIndex + j >= items.length) break;
@@ -135,27 +134,23 @@
                     }
                 }
 
-                // --- 2. CARI BERAT & NAMA PRODUK ---
+                // --- 2. DETEKSI BERAT & PRODUK ---
                 let berat = "1kg";
                 let produk = "Akrilik"; 
-                
                 const beratMatch = fullText.match(/Berat[:\s\.]*(\d+\s*(gr|kg))/i);
                 if (beratMatch) berat = beratMatch[1].replace(/\s/g, "");
                 
                 const lower = fullText.toLowerCase();
-                if (lower.includes("qris")) produk = "Standing QRIS";
-                else if (lower.includes("neon")) produk = "Neon Box";
-                else if (lower.includes("nomor") && lower.includes("rumah")) produk = "Nomor Rumah";
-                else if (lower.includes("a4")) produk = "A4";
-                else if (lower.includes("a5")) produk = "A5";
-                else if (lower.includes("a6")) produk = "A6";
+                if (lower.includes("qris")) produk = "Standing_QRIS";
+                else if (lower.includes("neon")) produk = "Neon_Box";
+                else if (lower.includes("nomor") && lower.includes("rumah")) produk = "Nomor_Rumah";
 
-                // Format nama file
                 fileNameInput.value = `EllUX_Legacy_${detectedName}_${berat}_${produk}`;
-                status.innerText = "✅ Selesai. Silakan cek nama & download.";
+                status.innerText = "✅ Selesai. Siakan download.";
 
-                // --- 3. RENDER, CROP LABEL & ZOOM VARIASI ---
-                const viewport = page.getViewport({scale: 2});
+                // --- 3. PROSES RENDER & CROP VERTIKAL ---
+                // Pakai scale 3 supaya teks variasi yang kecil tidak pecah/blur saat di-zoom
+                const viewport = page.getViewport({scale: 3});
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = viewport.height;
                 tempCanvas.height = viewport.width;
@@ -166,33 +161,45 @@
                 
                 await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
 
-                // Tentukan area pemotongan
-                const skipRatio = 0.40; 
-                const productAreaW = tempCanvas.width * skipRatio;     // Area daftar produk (dikiri setelah dirotasi)
-                const labelAreaW = tempCanvas.width - productAreaW;    // Area resi/alamat (dikanan)
-                const imgH = tempCanvas.height;
+                // Hitung koordinat berdasarkan layout standar PDF Shopee
+                const labelW = tempCanvas.width * 0.58;       // Lebar area utama label alamat (sisi kanan)
+                const labelH = tempCanvas.height;              // Tinggi penuh label
+                const productW = tempCanvas.width * 0.42;     // Lebar area daftar produk (sisi kiri)
+                const productH = tempCanvas.height;            // Tinggi penuh daftar produk
 
-                // Hitung seberapa besar variasi mau di-zoom (1.6x = cukup besar dan jelas)
-                const zoomScale = 1.6; 
-                const zoomedProductW = productAreaW * zoomScale;
-                const zoomedProductH = imgH * zoomScale;
+                // Faktor perbesaran (Zoom) khusus untuk kolom variasi agar terbaca jelas
+                const zoomFactor = 1.5; 
+                const finalProductW = labelW;                  // Lebar kolom variasi disamakan dengan lebar label biar rapi
+                const finalProductH = productH * zoomFactor * (labelW / (productW * zoomFactor)); 
 
-                // Siapkan ukuran canvas final (disambung memanjang ke samping)
-                canvas.width = labelAreaW + zoomedProductW;
-                canvas.height = Math.max(imgH, zoomedProductH);
+                // Tentukan dimensi canvas utama (Memanjang ke bawah / Vertikal)
+                canvas.width = labelW;
+                canvas.height = labelH + finalProductH + 20;   // Ditambah 20px untuk jarak/margin tengah
 
-                // Tarik area label (alamat) dan taruh di awal
+                // Isi background putih bersih agar tidak transparan
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Bagian Atas: Gambar Label Alamat Utama
                 ctx.drawImage(
                     tempCanvas, 
-                    productAreaW, 0, labelAreaW, imgH, // Dari mana
-                    0, 0, labelAreaW, imgH             // Ke mana
+                    tempCanvas.width - labelW, 0, labelW, labelH, // Source (Ambil sisi kanan PDF asli)
+                    0, 0, labelW, labelH                         // Destination
                 );
 
-                // Tarik area produk/variasi, perbesar (zoom), dan sambung di sebelahnya
+                // Garis pembatas visual biar karyawan tahu batas kertas potong
+                ctx.strokeStyle = "#ee4d2d";
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(0, labelH + 10);
+                ctx.lineTo(canvas.width, labelH + 10);
+                ctx.stroke();
+
+                // Bagian Bawah: Gambar Daftar Produk & Variasi yang sudah di-ZOOM
                 ctx.drawImage(
                     tempCanvas,
-                    0, 0, productAreaW, imgH,                           // Dari mana (area kiri)
-                    labelAreaW, 0, zoomedProductW, zoomedProductH       // Ke mana (sebelah label, diperbesar)
+                    0, 0, productW, productH,                     // Source (Ambil sisi kiri PDF asli tempat list barang)
+                    0, labelH + 20, finalProductW, finalProductH  // Destination (Ditaruh di bawah label alamat & otomatis membesar)
                 );
                 
                 previewContainer.style.display = 'block';
@@ -212,7 +219,7 @@
 
         const link = document.createElement('a');
         link.download = finalName;
-        link.href = canvas.toDataURL("image/jpeg", 1.0); // Kualitas maksimal
+        link.href = canvas.toDataURL("image/jpeg", 1.0);
         link.click();
     });
 </script>
